@@ -8,8 +8,8 @@ var io = socketio(server);
 app.use(express.static('static'));
 
 io.on('connection', (socket) => {
-  socket.on('socketping', () => {
-    console.log('Received socketping, sending socketpong');
-    socket.emit('socketpong');
+  socket.on('name', (name) => {
+    console.log(name + ' says hello!');
+    io.emit('name', name);
   });
 });
