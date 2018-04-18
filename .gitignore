@@ -1,0 +1,13 @@
+node_modules/
+platforms/
+plugins/
+www/build
+.idea/
+coverage/
+.tmp
+www
+tsconfig.tmp.json
+npm-debug.log
+.vscode
+dist
+.sourcemaps
