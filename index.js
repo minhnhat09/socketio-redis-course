@@ -7,21 +7,18 @@ var io = socketio(server);
 
 app.use(express.static('static'));
 
-io.on('connection', (socket) => {
-  socket.on('room.join', (room) => {
-    console.log(socket.rooms);
-    Object.keys(socket.rooms).filter((r) => r != socket.id)
-    .forEach((r) => socket.leave(r));
+var namespaceHandler = (namespace) => {
+  return (socket) => {
+    socket.emit('event', 'You joined ' + namespace.name);
+    //just resend it
+    socket.on('event', (data) => {
+      socket.broadcast.emit('event', data);
+    });
+  };
+}
 
-    setTimeout(() => {
-      socket.join(room);
-      socket.emit('event', 'Joined room ' + room);
-      socket.broadcast.to(room).emit('event', 'Someone joined room ' + room);
-    }, 0);
-  })
+var one = io.of('/namespace1');
+var two = io.of('/namespace2');
 
-  socket.on('event', (e) => {
-    socket.broadcast.to(e.room).emit('event', e.name + ' says hello!');
-  });
-
-});
+one.on('connection', namespaceHandler(one));
+two.on('connection', namespaceHandler(two));

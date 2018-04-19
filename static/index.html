@@ -1,41 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Socket.io Rooms</title
+  <title>Socket.io Namespace</title
 </head>
 <body>
-  <h1>Socket.io Rooms</h1>
-
-  <label for="name">Name:</label>
-  <input type="text" id="name"/>
-  <button id="say_hello">Say Hello!</button>
-
-  <label for="room">Room:</label>
-  <input type="text" id="room"/>
-  <button id="join_room">Join Room</button>
-
-  <ul id="list"></ul>
-
+  <h1>Socket.io Namespace</h1>
+  <button id="one">Namespace1</button>
+  <button id="two">Namespace2</button>
+  <ul id="list_one"></ul>
+  <ul id="list_two"></ul>
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    var socket = io({transports: ['websocket'], upgrade: false});
-    document.getElementById('join_room').addEventListener('click', (e) => {
-      socket.emit('room.join', document.getElementById('room').value);
+    var one = io('/namespace1', {transports: ['websocket'], upgrade: false});
+    var two = io('/namespace2', {transports: ['websocket'], upgrade: false});
+
+    document.getElementById('one').addEventListener('click', (e) => {
+      one.emit('event', 'Hello from one');
+    });
+    document.getElementById('two').addEventListener('click', (e) => {
+      two.emit('event', 'Hello from two');
     });
 
-    document.getElementById('say_hello').addEventListener('click', (e) => {
-      socket.emit('event',
-      { name: document.getElementById('name').value,
-       room: document.getElementById('room').value});
-    });
-
-    var addLi = (message) => {
-      var li = document.createElement('li');
-      li.appendChild(document.createTextNode(message));
-      document.getElementById('list').appendChild(li);
+    var addLi = (ul) => {
+      return (message) => {
+        var li = document.createElement('li');
+        li.appendChild(document.createTextNode(message));
+        document.getElementById(ul).appendChild(li);
+      };
     };
 
-    socket.on('event', addLi);
+    one.on('event', addLi('list_one'));
+    two.on('event', addLi('list_two'));
   </script>
 </body>
 </html>
