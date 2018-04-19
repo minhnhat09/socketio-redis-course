@@ -1,6 +1,5 @@
 const express = require('express'),
-  socketio = require('socket.io'),
-  redis = require('./redis.js');
+  socketio = require('socket.io');
 
 var app = express();
 var server = app.listen(8080);
@@ -8,34 +7,21 @@ var io = socketio(server);
 
 app.use(express.static('static'));
 
-var errorEmit = (socket) => {
-  return (err) => {
-    console.log(err);
-    socket.broadcast.emit('user.events', 'Something went wrong!');
-  };
-};
-
 io.on('connection', (socket) => {
-  // sử dụng broadcast để thông báo cho tụi còn lại (trừ mình ra)
-  socket.broadcast.emit('user.events', 'Someone has joined!');
-  socket.on('name', (name) => {
-    // lưu tên mình vào redis
-    redis.storeUser(socket.id, name)
-    .then(() => {
-      console.log(name + ' says hello!');
-      socket.broadcast.emit('name', name);
-    }, errorEmit(socket));
+  socket.on('room.join', (room) => {
+    console.log(socket.rooms);
+    Object.keys(socket.rooms).filter((r) => r != socket.id)
+    .forEach((r) => socket.leave(r));
+
+    setTimeout(() => {
+      socket.join(room);
+      socket.emit('event', 'Joined room ' + room);
+      socket.broadcast.to(room).emit('event', 'Someone joined room ' + room);
+    }, 0);
+  })
+
+  socket.on('event', (e) => {
+    socket.broadcast.to(e.room).emit('event', e.name + ' says hello!');
   });
 
-  socket.on('disconnect', () => {
-    redis.getUser(socket.id)
-    .then((user) => {
-      if (user === null) return 'Someone'
-      else return user
-    })
-    .then((user) => {
-      console.log(user + ' left');
-      socket.broadcast.emit('user.events', user + ' left');
-    }, errorEmit(socket))
-  });
 });
